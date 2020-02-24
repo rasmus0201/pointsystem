@@ -1,6 +1,16 @@
 <template>
     <q-page class="q-pa-md">
         <div class="row">
+            <div class="col-12 q-mb-sm">
+                <q-badge color="positive" align="middle" class="q-mr-sm">
+                    Accepteret: {{ acceptedCount }}
+                </q-badge>
+                <q-badge color="negative" align="middle">
+                    Ikke-accepteret: {{ deniedCount }}
+                </q-badge>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-12">
                 <calendar
                     :date="currentDate"
@@ -40,6 +50,11 @@
                 </q-card>
             </div>
         </div>
+        <div class="row">
+            <div class="col-12 q-mt-lg">
+                <q-btn color="warning" @click="resetItems()">Nulstil alt</q-btn>
+            </div>
+        </div>
     </q-page>
 </template>
 
@@ -56,6 +71,7 @@ export default {
     data() {
         return {
             currentDate: date.formatDate(Date.now(), 'YYYY-MM-DD'),
+            recompute: Math.random(),
         };
     },
 
@@ -65,16 +81,44 @@ export default {
         }),
 
         item: function() {
+            const dummy = this.recompute;
+
             if (this.items.hasOwnProperty(this.currentDate)) {
                 return this.items[this.currentDate];
             }
 
             return this.getDefaultItem(this.currentDate);
         },
+
+        acceptedCount: function() {
+            const dummy = this.recompute;
+            let count = 0;
+
+            for (var prop in this.items) {
+                if (this.items[prop].state === 'accepted') {
+                    count++;
+                }
+            }
+
+            return count;
+        },
+
+        deniedCount: function() {
+            const dummy = this.recompute;
+            let count = 0;
+
+            for (var prop in this.items) {
+                if (this.items[prop].state === 'denied') {
+                    count++;
+                }
+            }
+
+            return count;
+        },
     },
 
     methods: {
-        ...mapActions('items', ['update']),
+        ...mapActions('items', ['update', 'reset']),
 
         getDefaultItem(dateKey) {
             const dateObj = date.extractDate(dateKey, 'YYYY-MM-DD');
@@ -91,10 +135,13 @@ export default {
             this.currentDate = date.formatDate(newDate, 'YYYY-MM-DD');
         },
 
-        refreshDate() {
-            const tmp = this.currentDate;
-            this.currentDate = null;
-            this.currentDate = tmp;
+        refresh() {
+            this.recompute = Math.random();
+        },
+
+        resetItems() {
+            this.reset();
+            this.refresh();
         },
 
         updateItem(state) {
@@ -110,7 +157,7 @@ export default {
 
             this.update(item);
 
-            this.refreshDate();
+            this.refresh();
         },
     },
 };
